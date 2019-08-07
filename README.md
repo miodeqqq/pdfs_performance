@@ -19,12 +19,14 @@ Maciej Januszewski (maciek@mjanuszewski.pl)
 docker pull logicalspark/docker-tikaserver
 docker run -d -p 9998:9998 logicalspark/docker-tikaserver
 ```
-
-### Running as human:
+### Sample PDFs data:
+```
+https://drive.google.com/open?id=1Xb99gWgynHO02e2YvAyX0dsnfUmWJwJD
+```
+### Running:
 ```
 ./run.py <path/to/pdfs_data/>
 ```
-
 
 ### Sample plots outputs:
 **- Final statistics - overall processing time:**
