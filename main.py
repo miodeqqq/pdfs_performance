@@ -87,56 +87,49 @@ class StatisticPlot:
             x=list(self.regex.keys()),
             y=list(self.regex.values()),
             name='REGEX',
-            textposition='auto',
-            marker_color=PLOTLY_COLORS
+            textposition='auto'
         )
 
         pypdf2_data = go.Bar(
             x=list(self.pypdf2.keys()),
             y=list(self.pypdf2.values()),
             name='PYPDF2',
-            textposition='auto',
-            marker_color=PLOTLY_COLORS
+            textposition='auto'
         )
 
         pdfrw_data = go.Bar(
             x=list(self.pdfrw.keys()),
             y=list(self.pdfrw.values()),
             name='PDFRW',
-            textposition='auto',
-            marker_color=PLOTLY_COLORS
+            textposition='auto'
         )
 
         pdfquery_data = go.Bar(
             x=list(self.pdfquery.keys()),
             y=list(self.pdfquery.values()),
             name='PDFQUERY',
-            textposition='auto',
-            marker_color=PLOTLY_COLORS
+            textposition='auto'
         )
 
         tika_data = go.Bar(
             x=list(self.tika.keys()),
             y=list(self.tika.values()),
             name='TIKA',
-            textposition='auto',
-            marker_color=PLOTLY_COLORS
+            textposition='auto'
         )
 
         pdfminer_data = go.Bar(
             x=list(self.pdfminer.keys()),
             y=list(self.pdfminer.values()),
             name='PDFMINER',
-            textposition='auto',
-            marker_color=PLOTLY_COLORS
+            textposition='auto'
         )
 
         pymupdf_data = go.Bar(
             x=list(self.pymupdf.keys()),
             y=list(self.pymupdf.values()),
             name='PYMUPDF',
-            textposition='auto',
-            marker_color=PLOTLY_COLORS
+            textposition='auto'
         )
 
         data = [
