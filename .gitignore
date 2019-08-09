@@ -110,3 +110,6 @@ ENV/
 
 #project
 pdfs_data/
+pdfs_processing_time/
+plots/
+processing_stats/
