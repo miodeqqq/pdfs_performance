@@ -25,7 +25,7 @@ https://drive.google.com/open?id=1Xb99gWgynHO02e2YvAyX0dsnfUmWJwJD
 ```
 ### Running:
 ```
-./run.py <path/to/pdfs_data/>
+./run.py /path/to/pdfs_data/ > /dev/null 2>&1 #disable prints
 ```
 
 ### Sample plots outputs:

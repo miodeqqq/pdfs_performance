@@ -13,8 +13,6 @@ import warnings
 from shutil import rmtree
 
 import fitz
-import plotly.graph_objs as go
-import plotly.offline as opy
 import ujson as json
 from PyPDF2 import PdfFileReader
 from PyPDF2.utils import PdfReadError
@@ -25,194 +23,23 @@ from pdfquery import PDFQuery
 from pdfrw import PdfReader
 from tika import parser
 
-from utils import Colors, PLOTLY_COLORS
+from utils import Colors
 
 gc.collect()
 
 warnings.simplefilter('ignore')
 
 
-class StatisticPlot:
-    def __init__(self, regex, pypdf2, pdfrw, pdfquery, tika, pdfminer, pymupdf):
-        self.regex = self.__read(regex)
-        self.pypdf2 = self.__read(pypdf2)
-        self.pdfrw = self.__read(pdfrw)
-        self.pdfquery = self.__read(pdfquery)
-        self.tika = self.__read(tika)
-        self.pdfminer = self.__read(pdfminer)
-        self.pymupdf = self.__read(pymupdf)
-
-    def __read(self, file_obj):
-        """
-        General method to return data done with given tool.
-        """
-
-        with open(file_obj, 'r') as data_file:
-            return dict([x.lower().strip().split(';') for x in data_file])
-
-    def __make_layout(self, x_title, y_title):
-        """
-        Creates final layout with labels for XY axis.
-        """
-
-        return go.Layout(
-            title='Python libraries performance with reading PDF and gathering info about the number of pages',
-            xaxis=dict(
-                title=x_title,
-                autorange=True,
-                titlefont=dict(
-                    family='Verdana',
-                    size=18,
-                    color='#7f7f7f'
-                )
-            ),
-            yaxis=dict(
-                autorange=True,
-                title=y_title,
-                titlefont=dict(
-                    family='Verdana',
-                    size=18,
-                    color='#7f7f7f'
-                )
-            ),
-        )
-
-    def generate_bar_plot(self):
-        """
-        General method to generate Bar plot.
-        """
-
-        # make Bar plots
-        regex_data = go.Bar(
-            x=list(self.regex.keys()),
-            y=list(self.regex.values()),
-            name='REGEX',
-            textposition='auto'
-        )
-
-        pypdf2_data = go.Bar(
-            x=list(self.pypdf2.keys()),
-            y=list(self.pypdf2.values()),
-            name='PYPDF2',
-            textposition='auto'
-        )
-
-        pdfrw_data = go.Bar(
-            x=list(self.pdfrw.keys()),
-            y=list(self.pdfrw.values()),
-            name='PDFRW',
-            textposition='auto'
-        )
-
-        pdfquery_data = go.Bar(
-            x=list(self.pdfquery.keys()),
-            y=list(self.pdfquery.values()),
-            name='PDFQUERY',
-            textposition='auto'
-        )
-
-        tika_data = go.Bar(
-            x=list(self.tika.keys()),
-            y=list(self.tika.values()),
-            name='TIKA',
-            textposition='auto'
-        )
-
-        pdfminer_data = go.Bar(
-            x=list(self.pdfminer.keys()),
-            y=list(self.pdfminer.values()),
-            name='PDFMINER',
-            textposition='auto'
-        )
-
-        pymupdf_data = go.Bar(
-            x=list(self.pymupdf.keys()),
-            y=list(self.pymupdf.values()),
-            name='PYMUPDF',
-            textposition='auto'
-        )
-
-        data = [
-            regex_data,
-            pypdf2_data,
-            pdfrw_data,
-            pdfquery_data,
-            tika_data,
-            pdfminer_data,
-            pymupdf_data
-        ]
-
-        layout = self.__make_layout(
-            x_title='filename',
-            y_title='processing time (seconds)'
-        )
-
-        fig = go.Figure(
-            data=data,
-            layout=layout
-        )
-
-        fig.update_layout(barmode='group')
-
-        opy.plot(
-            fig,
-            filename='./plots/pdfs_performance_bar.html'
-        )
-
-    def generate_final_statistics_bar_plot(self, stats_dict):
-        """
-        General method to generate final statistics Bar plot.
-        """
-
-        final_time_stats = [(k, v) for k, v in stats_dict.items() if 'parsing_time' in k.lower()]
-
-        d = {}
-
-        for item in final_time_stats:
-            d[item[0].split('_')[0]] = item[1]
-
-        _x = list(d.keys())
-        _y = list(d.values())
-
-        final_data = go.Bar(
-            x=list(_x),
-            y=_y,
-            name='Final statistics',
-            textposition='auto',
-            marker_color=PLOTLY_COLORS
-        )
-
-        data = [
-            final_data,
-        ]
-
-        layout = self.__make_layout(
-            x_title='Library',
-            y_title='Overall processing time (seconds)'
-        )
-
-        fig = go.Figure(
-            data=data,
-            layout=layout
-        )
-
-        fig.update_layout(barmode='group')
-
-        opy.plot(
-            fig,
-            filename='./plots/pdfs_performance_final_stats_bar.html'
-        )
-
-
 class LibrariesTesting:
     def __init__(self, path):
         self.path = path
+
         self.pdfs = self.__prepare_pdfs()
 
         self.pdfs_processing_dir = './pdfs_processing_time'
-        self.pdfs_processing_dir_with_filesizes = './pdfs_processing_time_with_filesizes'
         self.json_path = './processing_stats'
         self.plots_path = './plots'
+
         self.default_time = '{:0.5f}'.format(0)
         self.final_stats_dict = {}
         self.single_file_stats = {}
@@ -228,9 +55,6 @@ class LibrariesTesting:
         """
         Removes old dirs.
         """
-
-        if os.path.exists(self.pdfs_processing_dir_with_filesizes):
-            rmtree(self.pdfs_processing_dir_with_filesizes)
 
         if os.path.exists(self.pdfs_processing_dir):
             rmtree(self.pdfs_processing_dir)
@@ -266,9 +90,6 @@ class LibrariesTesting:
             if not os.path.exists(self.pdfs_processing_dir):
                 os.makedirs(self.pdfs_processing_dir)
 
-            if not os.path.exists(self.pdfs_processing_dir_with_filesizes):
-                os.makedirs(self.pdfs_processing_dir_with_filesizes)
-
             if not os.path.exists(self.json_path):
                 os.makedirs(self.json_path)
 
@@ -278,7 +99,7 @@ class LibrariesTesting:
         except OSError:
             raise ('Problem with creating new directories!')
 
-    def save_final_stats(self):
+    def __save_final_stats(self):
         """
         Returns finals stats for processed files.
         """
@@ -297,26 +118,6 @@ class LibrariesTesting:
                 indent=4,
                 ensure_ascii=False
             )
-
-    def __save_mining_time_with_filesize(self, item, test_type):
-        """
-        Stores in file time of processing pdf item and size of processed file.
-        """
-
-        self.mining_time_filename_with_filesizes = '{test_type}_with_filesize.txt'.format(
-            test_type=test_type
-        )
-
-        save_path = './{processing_dir}/{filename}'.format(
-            processing_dir=self.pdfs_processing_dir_with_filesizes,
-            filename=self.mining_time_filename_with_filesizes
-        )
-
-        with open(save_path, 'a') as f:
-            f.write('{item1};{item2}\n'.format(
-                item1=item[0],
-                item2=item[1]
-            ))
 
     def __save_mining_time(self, item, test_type):
         """
@@ -377,13 +178,6 @@ class LibrariesTesting:
 
                     self.__save_mining_time(
                         item=mining_time,
-                        test_type='regex'
-                    )
-
-                    _filename_with_size = single_file_time, self.get_file_size(pdf_file)
-
-                    self.__save_mining_time_with_filesize(
-                        item=_filename_with_size,
                         test_type='regex'
                     )
 
@@ -466,13 +260,6 @@ class LibrariesTesting:
                         test_type='pypdf2'
                     )
 
-                    _filename_with_size = single_file_time, self.get_file_size(pdf_file)
-
-                    self.__save_mining_time_with_filesize(
-                        item=_filename_with_size,
-                        test_type='pypdf2'
-                    )
-
                     print(
                         Colors.OKGREEN + '[PyPDF2] File {i}/{index}. Total pages: {pages_count} --> "{filename}" - {file_size}'.format(
                             i=index,
@@ -549,13 +336,6 @@ class LibrariesTesting:
 
                     self.__save_mining_time(
                         item=mining_time,
-                        test_type='pdfrw'
-                    )
-
-                    _filename_with_size = single_file_time, self.get_file_size(pdf_file)
-
-                    self.__save_mining_time_with_filesize(
-                        item=_filename_with_size,
                         test_type='pdfrw'
                     )
 
@@ -638,13 +418,6 @@ class LibrariesTesting:
                         test_type='pdfquery'
                     )
 
-                    _filename_with_size = single_file_time, self.get_file_size(pdf_file)
-
-                    self.__save_mining_time_with_filesize(
-                        item=_filename_with_size,
-                        test_type='pdfquery'
-                    )
-
                     print(
                         Colors.FAIL + '[PDFQUERY] File {i}/{index}. Total pages: {pages_count} --> "{filename}" - {file_size}'.format(
                             i=index,
@@ -723,13 +496,6 @@ class LibrariesTesting:
 
                     self.__save_mining_time(
                         item=mining_time,
-                        test_type='tika'
-                    )
-
-                    _filename_with_size = single_file_time, self.get_file_size(pdf_file)
-
-                    self.__save_mining_time_with_filesize(
-                        item=_filename_with_size,
                         test_type='tika'
                     )
 
@@ -815,13 +581,6 @@ class LibrariesTesting:
                         test_type='pdfminer'
                     )
 
-                    _filename_with_size = single_file_time, self.get_file_size(pdf_file)
-
-                    self.__save_mining_time_with_filesize(
-                        item=_filename_with_size,
-                        test_type='pdfminer'
-                    )
-
                     print(
                         Colors.CYAN + '[PDFMINER] File {i}/{index}. Total pages: {pages_count} --> "{filename}" - {file_size}'.format(
                             i=index,
@@ -866,7 +625,7 @@ class LibrariesTesting:
         Test 7 - Using PyMuPDF.
         """
 
-        print(Colors.UNDERLINE + '________________________________________________\n' + Colors.ENDC)
+        # print(Colors.UNDERLINE + '________________________________________________\n' + Colors.ENDC)
 
         total_pages, errors, total_mining_time = [], [], []
 
@@ -894,13 +653,6 @@ class LibrariesTesting:
 
                 self.__save_mining_time(
                     item=mining_time,
-                    test_type='pymupdf'
-                )
-
-                _filename_with_size = single_file_time, self.get_file_size(pdf_file)
-
-                self.__save_mining_time_with_filesize(
-                    item=_filename_with_size,
                     test_type='pymupdf'
                 )
 
@@ -1004,6 +756,5 @@ class LibrariesTesting:
         self.__test_tika()
         self.__test_pdfminer()
         self.__test_pymupdf()
-
-        self.save_final_stats()
+        self.__save_final_stats()
         self.generate_final_stats()

@@ -5,7 +5,8 @@
 import os
 import sys
 
-from main import LibrariesTesting, StatisticPlot
+from libraries_tests import LibrariesTesting
+from plot import StatisticPlot
 
 
 def run():
